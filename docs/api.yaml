@@ -1,0 +1,112 @@
+openapi: "3.0.0"
+info:
+  title: Simple Warehouse API
+  version: 1.0.0
+servers:
+  - url: 'http:/localhost:8080/warehouse/api'
+paths:
+  /ads/metrics:
+    post:
+      tags:
+        - Ads
+      operationId: queryAdsMetrics
+      summary: "An endpoint to query Ads specific metrics, including 'clicks', 'impressions' and 'ctr'."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/adsMetricsRequest"
+
+      responses:
+        '200':
+          description: 'Query response'
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/adsMetricsResponse"
+components:
+  schemas:
+    adsMetricsRequest:
+      type: object
+      required:
+        - metrics
+      properties:
+        metrics:
+          type: array
+          items:
+            type: string
+          enum:
+            - clicks
+            - impressions
+            - ctr
+        filters:
+          type: object
+          nullable: true
+          properties:
+            campaign:
+              type: string
+              example: 'Touristik Routenplaner'
+            datasource:
+              type: string
+              example: 'Google Ads'
+        groupBy:
+          type: array
+          nullable: true
+          items:
+            type: string
+            example:
+              - campaign
+              - datasource
+          enum:
+            - campaign
+            - datasource
+        dateRange:
+          type: object
+          nullable: true
+          required:
+            - from
+            - to
+          properties:
+            from:
+              type: string
+              example: '2019-12-01T00:00:00+00:00'
+            to:
+              type: string
+              example: '2019-12-31T00:00:00+00:00'
+    adsMetricsResponse:
+      type: object
+      properties:
+        totals:
+          type: object
+          properties:
+            clicks:
+              type: integer
+              nullable: true
+            impressions:
+              type: integer
+              nullable: true
+            ctr:
+              type: integer
+              nullable: true
+        entries:
+          type: array
+          nullable: true
+          items:
+            type: object
+            properties:
+              clicks:
+                type: integer
+                nullable: true
+              impressions:
+                type: integer
+                nullable: true
+              ctr:
+                type: integer
+                nullable: true
+              datasource:
+                type: string
+                nullable: true
+              campaign:
+                type: string
+                nullable: true

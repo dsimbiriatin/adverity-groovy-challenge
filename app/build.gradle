@@ -1,0 +1,83 @@
+plugins {
+    id 'groovy'
+    id 'application'
+    id 'nu.studer.jooq' version '5.2.2'
+    id 'org.springframework.boot' version '2.6.7'
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+sourceCompatibility = JavaVersion.VERSION_17
+targetCompatibility = JavaVersion.VERSION_17
+
+apply plugin: 'io.spring.dependency-management'
+
+ext {
+    groovyVersion = '4.0.2'
+    jooqVersion = '3.14.15'
+    springBootVersion = '2.6.7'
+    testcontainersVersions = '1.17.1'
+    spockVersion = '2.2-M1-groovy-4.0'
+    mysqlDriverVersion = '8.0.29'
+
+    // Jooq
+    mysqlContainer = '5.7.34'
+    initSchema = "file:$projectDir/src/test/resources/schema/warehouse-schema.sql"
+}
+
+dependencies {
+    implementation "org.apache.groovy:groovy:$groovyVersion"
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-jooq'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation "mysql:mysql-connector-java:$mysqlDriverVersion"
+
+    testImplementation "org.testcontainers:testcontainers:$testcontainersVersions"
+    testImplementation "org.testcontainers:mysql:$testcontainersVersions"
+    testImplementation "org.spockframework:spock-core:$spockVersion"
+    testImplementation "org.spockframework:spock-spring:$spockVersion"
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+    jooqGenerator "org.testcontainers:testcontainers:$testcontainersVersions"
+    jooqGenerator "org.testcontainers:mysql:$testcontainersVersions"
+    jooqGenerator "mysql:mysql-connector-java:$mysqlDriverVersion"
+    jooqGenerator 'ch.qos.logback:logback-classic'
+}
+
+application {
+    mainClass = 'com.averity.simple.warehouse.SimpleWarehouse'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+bootJar {
+    archiveClassifier = 'boot'
+}
+
+jooq {
+    version = jooqVersion
+    configurations {
+        main {
+            generationTool {
+                jdbc {
+                    driver = 'org.testcontainers.jdbc.ContainerDatabaseDriver'
+                    url = "jdbc:tc:mysql:$mysqlContainer://sw?TC_INITSCRIPT=$initSchema?user=root?password=?"
+                }
+                generator {
+                    database {
+                        name = 'org.jooq.meta.mysql.MySQLDatabase'
+                        inputSchema = 'sw'
+                    }
+                    target {
+                        packageName = 'com.averity.simple.warehouse.jooq'
+                    }
+                }
+            }
+        }
+    }
+}
